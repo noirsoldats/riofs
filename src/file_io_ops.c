@@ -292,6 +292,16 @@ static void fileio_release_on_part_con_cb (gpointer client, gpointer ctx)
         http_connection_add_output_header (con, "x-amz-storage-class", conf_get_string (application_get_conf (con->app), "s3.storage_type"));
     }
 
+    // Check for and enable S3 Server Side Encryption
+    if (conf_get_boolean (application_get_conf (con->app), "s3.enable_encryption")) {
+        const gchar *encryption_type = conf_get_string(application_get_conf(con->app), "s3.encryption_type");
+        LOG_debug(FIO_LOG, "Encryption enabled, encryption type %s", encryption_type);
+        http_connection_add_output_header(con, "x-amz-server-side-encryption", encryption_type);
+        if (encryption_type == "aws:kms") {
+            http_connection_add_output_header(con, "x-amz-server-side-encryption-aws-kms-key-id", conf_get_string(application_get_conf(con->app), "s3.encryption_kms_key_id"));
+        }
+    }
+
     res = http_connection_make_request (con,
         path, "PUT", fop->write_buf, TRUE, NULL,
         fileio_release_on_part_sent_cb,

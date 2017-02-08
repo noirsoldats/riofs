@@ -44,6 +44,14 @@
          Please read S3 documentation before changing this value ! -->
     <storage_type type="string">STANDARD</storage_type>
 
+    <!-- set True to enable Server Side S3 Encryption -->
+    <enable_encryption type="boolean">True</enable_encryption>
+    <!-- set to type of encryption for Server Side S3 Encryption -->
+    <!-- Supported Types: 'AES256' and 'aws:kms' -->
+    <encryption_type type="string">AES256</encryption_type>
+    <!-- Include the following if using the 'aws:kms' encryption type-->
+    <!-- <encryption_kms_key_id type="string">### AWS KMS KEY ID ###</encryption_kms_key_id> -->
+
     <!-- Use either environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or configuration file.
          Uncomment these 2 lines and replace ### strings with your data: -->
     <!--
