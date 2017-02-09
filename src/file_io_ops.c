@@ -542,6 +542,16 @@ static void fileio_write_on_multipart_init_con_cb (gpointer client, gpointer ctx
     // send storage class with the init request
     http_connection_add_output_header (con, "x-amz-storage-class", conf_get_string (application_get_conf (con->app), "s3.storage_type"));
 
+    // Check for and enable S3 Server Side Encryption
+    if (conf_get_boolean (application_get_conf (con->app), "s3.enable_encryption")) {
+        const gchar *encryption_type = conf_get_string(application_get_conf(con->app), "s3.encryption_type");
+        LOG_debug(FIO_LOG, "Encryption enabled, encryption type %s", encryption_type);
+        http_connection_add_output_header(con, "x-amz-server-side-encryption", encryption_type);
+        if (encryption_type == "aws:kms") {
+            http_connection_add_output_header(con, "x-amz-server-side-encryption-aws-kms-key-id", conf_get_string(application_get_conf(con->app), "s3.encryption_kms_key_id"));
+        }
+    }
+
     res = http_connection_make_request (con,
         path, "POST", NULL, TRUE, NULL,
         fileio_write_on_multipart_init_cb,
@@ -996,6 +1006,16 @@ static void fileio_simple_upload_on_con_cb (gpointer client, gpointer ctx)
     t = time (NULL);
     if (strftime (time_str, sizeof (time_str), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&t))) {
         http_connection_add_output_header (con, "x-amz-meta-date", time_str);
+    }
+
+    // Check for and enable S3 Server Side Encryption
+    if (conf_get_boolean (application_get_conf (con->app), "s3.enable_encryption")) {
+        const gchar *encryption_type = conf_get_string(application_get_conf(con->app), "s3.encryption_type");
+        LOG_debug(FIO_LOG, "Encryption enabled, encryption type %s", encryption_type);
+        http_connection_add_output_header(con, "x-amz-server-side-encryption", encryption_type);
+        if (encryption_type == "aws:kms") {
+            http_connection_add_output_header(con, "x-amz-server-side-encryption-aws-kms-key-id", conf_get_string(application_get_conf(con->app), "s3.encryption_kms_key_id"));
+        }
     }
 
     res = http_connection_make_request (con,

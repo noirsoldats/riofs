@@ -2030,6 +2030,16 @@ static void dir_tree_on_rename_copy_con_cb (gpointer client, gpointer ctx)
 
     http_connection_add_output_header (con, "x-amz-storage-class", conf_get_string (application_get_conf (rdata->dtree->app), "s3.storage_type"));
 
+    // Check for and enable S3 Server Side Encryption
+    if (conf_get_boolean (application_get_conf (con->app), "s3.enable_encryption")) {
+        const gchar *encryption_type = conf_get_string(application_get_conf(con->app), "s3.encryption_type");
+        LOG_debug(DIR_TREE_LOG, "Encryption enabled, encryption type %s", encryption_type);
+        http_connection_add_output_header(con, "x-amz-server-side-encryption", encryption_type);
+        if (encryption_type == "aws:kms") {
+            http_connection_add_output_header(con, "x-amz-server-side-encryption-aws-kms-key-id", conf_get_string(application_get_conf(con->app), "s3.encryption_kms_key_id"));
+        }
+    }
+
     if (rdata->newparent_ino == FUSE_ROOT_ID)
         dst_path = g_strdup_printf ("%s/%s", newparent_en->fullpath, rdata->newname);
     else
